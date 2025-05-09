@@ -64,6 +64,8 @@ final class ApplicationFileProcessor
             return new ProcessResult([], []);
         }
 
+        SimpleParameterProvider::setParameter(Option::FILE_PATHS, $filePaths);
+
         $this->missConfigurationReporter->reportVendorInPaths($filePaths);
         $this->missConfigurationReporter->reportStartWithShortOpenTag();
 
@@ -118,6 +120,10 @@ final class ApplicationFileProcessor
         ?callable $preFileCallback = null,
         ?callable $postFileCallback = null
     ): ProcessResult {
+        if (SimpleParameterProvider::provideArrayParameter(Option::FILE_PATHS) === []) {
+            SimpleParameterProvider::setParameter(Option::FILE_PATHS, $filePaths);
+        }
+
         /** @var SystemError[] $systemErrors */
         $systemErrors = [];
 
