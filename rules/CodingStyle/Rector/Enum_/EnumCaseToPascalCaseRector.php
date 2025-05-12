@@ -128,13 +128,17 @@ final class EnumCaseToPascalCaseRector extends AbstractRector
         }
 
         $enumClassName = $classConstFetch->class->toString();
+        var_dump($enumClassName);
         if (! $this->reflectionProvider->hasClass($enumClassName)) {
+            echo 'Does not have class' . PHP_EOL;
             return null;
         }
 
         $targetEnumFile = $this->reflectionProvider->getClass($classConstFetch->class->toString())
             ->getFileName();
         if (! in_array($targetEnumFile, SimpleParameterProvider::provideArrayParameter(Option::FILE_PATHS), true)) {
+            var_dump($targetEnumFile);
+            var_dump(SimpleParameterProvider::provideArrayParameter(Option::FILE_PATHS));
             return null;
         }
 
