@@ -6,6 +6,7 @@ namespace Rector\Tests\FileSystem\FilesFinder;
 
 use Iterator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Rector\Caching\Cache;
 use Rector\Configuration\Option;
 use Rector\Configuration\Parameter\SimpleParameterProvider;
 use Rector\FileSystem\FilesFinder;
@@ -22,10 +23,17 @@ final class FilesFinderTest extends AbstractLazyTestCase
         $this->filesFinder = $this->make(FilesFinder::class);
     }
 
+    protected function tearDown(): void
+    {
+        $this->clearCache();
+    }
+
     public function test(): void
     {
         $foundFiles = $this->filesFinder->findInDirectoriesAndFiles([__DIR__ . '/SourceWithSymlinks'], ['txt']);
         $this->assertCount(1, $foundFiles);
+
+        $this->clearCache();
 
         $foundFiles = $this->filesFinder->findInDirectoriesAndFiles([__DIR__ . '/SourceWithShortEchoes'], ['php']);
         $this->assertEmpty($foundFiles);
@@ -41,6 +49,8 @@ final class FilesFinderTest extends AbstractLazyTestCase
             $foundFiles[0],
             'should return absolute path if absolute is given'
         );
+
+        $this->clearCache();
 
         $foundFiles = $this->filesFinder->findInDirectoriesAndFiles([$relativePath], ['php']);
         $this->assertStringStartsWith(
@@ -135,6 +145,8 @@ final class FilesFinderTest extends AbstractLazyTestCase
         $foundNoFilterFiles = $this->filesFinder->findInDirectoriesAndFiles([__DIR__ . '/SourceWithSuffix']);
         $this->assertCount(3, $foundNoFilterFiles);
 
+        $this->clearCache();
+
         $foundFiles = $this->filesFinder->findInDirectoriesAndFiles(
             [__DIR__ . '/SourceWithSuffix', __DIR__ . '/SourceWithSuffix/other_unrelated_file.php'],
             ['php'],
@@ -144,6 +156,8 @@ final class FilesFinderTest extends AbstractLazyTestCase
         $this->assertCount(1, $foundFiles);
 
         $this->assertSame('SomeController.php', $this->getFileBasename($foundFiles[0]));
+
+        $this->clearCache();
 
         $foundFullSuffixFiles = $this->filesFinder->findInDirectoriesAndFiles(
             [__DIR__ . '/SourceWithSuffix'],
@@ -159,5 +173,11 @@ final class FilesFinderTest extends AbstractLazyTestCase
     private function getFileBasename(string $foundFile): string
     {
         return pathinfo($foundFile, PATHINFO_BASENAME);
+    }
+
+    private function clearCache(): void
+    {
+        $this->make(Cache::class)->clear();
+
     }
 }

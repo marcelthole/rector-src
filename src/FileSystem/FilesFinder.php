@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Rector\FileSystem;
 
 use Nette\Utils\FileSystem;
+use Rector\Caching\Cache;
 use Rector\Caching\Detector\ChangedFilesDetector;
+use Rector\Caching\Enum\CacheKey;
 use Rector\Caching\UnchangedFilesFilter;
 use Rector\Configuration\Option;
 use Rector\Configuration\Parameter\SimpleParameterProvider;
@@ -25,6 +27,7 @@ final readonly class FilesFinder
         private PathSkipper $pathSkipper,
         private FilePathHelper $filePathHelper,
         private ChangedFilesDetector $changedFilesDetector,
+        private Cache $cache,
     ) {
     }
 
@@ -39,6 +42,11 @@ final readonly class FilesFinder
         bool $sortByName = true,
         ?string $onlySuffix = null
     ): array {
+        $filePaths = $this->cache->load(CacheKey::FILE_PATHS, CacheKey::FILE_PATHS);
+        if (is_array($filePaths)) {
+            return $this->unchangedFilesFilter->filterFilePaths($filePaths);
+        }
+
         $filesAndDirectories = $this->filesystemTweaker->resolveWithFnmatch($source);
 
         // filtering files in files collection
@@ -102,6 +110,9 @@ final readonly class FilesFinder
         );
 
         $filePaths = [...$filteredFilePaths, ...$filteredFilePathsInDirectories];
+
+        $this->cache->save(CacheKey::FILE_PATHS, CacheKey::FILE_PATHS, $filePaths);
+
         return $this->unchangedFilesFilter->filterFilePaths($filePaths);
     }
 
